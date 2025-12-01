@@ -83,6 +83,22 @@ while ($true) {
         Write-Host "Press Ctrl+C to stop listening" -ForegroundColor Yellow
         Write-Host ""
 
+        # Send client identification to server
+        $pcName = $env:COMPUTERNAME
+        Write-Host "Registering client: $pcName" -ForegroundColor Cyan
+        $registrationBody = @{ 
+            client_name = $pcName
+            status = "connected"
+        } | ConvertTo-Json
+        
+        try {
+            Invoke-RestMethod -Uri "http://${server}:${httpPort}/upstream" -Method POST -Body $registrationBody -ContentType "application/json" -ErrorAction Stop | Out-Null
+            Write-Host "Client registered successfully" -ForegroundColor Green
+        }
+        catch {
+            Write-Host "Warning: Could not register client - $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+
         try {
             while ($true) {
                 # Periodic network check
@@ -135,7 +151,11 @@ while ($true) {
                                     Write-Host "Output: $output" -ForegroundColor Gray
                                     
                                     # Send output back to server as a text message to POST /upstream
-                                    $body = @{ output = $output } | ConvertTo-Json
+                                    $pcName = $env:COMPUTERNAME
+                                    $body = @{ 
+                                        client_name = $pcName
+                                        output = $output 
+                                    } | ConvertTo-Json
                                     try {
                                         Invoke-RestMethod -Uri "http://${server}:${httpPort}/upstream" -Method POST -Body $body -ContentType "application/json" -ErrorAction Stop | Out-Null
                                         Write-Host "Result sent to server" -ForegroundColor Green
@@ -148,8 +168,12 @@ while ($true) {
                             catch {
                                 Write-Host "Error executing command: $($_.Exception.Message)" -ForegroundColor Red
                                 # Send error back to server as a text message to POST /upstream
+                                $pcName = $env:COMPUTERNAME
                                 $errorOutput = "ERROR: $($_.Exception.Message)"
-                                $body = @{ output = $errorOutput } | ConvertTo-Json
+                                $body = @{ 
+                                    client_name = $pcName
+                                    output = $errorOutput 
+                                } | ConvertTo-Json
                                 try {
                                     Invoke-RestMethod -Uri "http://${server}:${httpPort}/upstream" -Method POST -Body $body -ContentType "application/json" -ErrorAction Stop | Out-Null
                                     Write-Host "Error sent to server" -ForegroundColor Yellow

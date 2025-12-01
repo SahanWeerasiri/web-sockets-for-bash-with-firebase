@@ -26,7 +26,7 @@ pip install -r requirements.txt
 
 2. **Create `.env` file** in the project root:
 ```env
-FIREBASE_DATABASE_URL=https://file-browser-f745d-default-rtdb.firebaseio.com
+FIREBASE_DATABASE_URL=https://db-default-rtdb.firebaseio.com
 FIREBASE_SERVICE_ACCOUNT_KEY_PATH=./serviceAccountKey.json
 FLASK_HOST=127.0.0.1
 PORT=5005

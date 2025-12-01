@@ -121,26 +121,26 @@ def start_firebase_listener():
     ref.listen(listener)
     print("Firebase listener started")
 
-# Flask routes
-@app.route('/')
-def home():
-    return jsonify({
-        'status': 'running',
-        'message': 'Firebase Realtime Database listener is active',
-        'listening_to': os.getenv("FIREBASE_DATABASE_URL"),
-        'tcp_broadcast_port': TCP_PORT,
-        'connected_tcp_clients': len(tcp_clients)
-    })
+# # Flask routes
+# @app.route('/')
+# def home():
+#     return jsonify({
+#         'status': 'running',
+#         'message': 'Firebase Realtime Database listener is active',
+#         'listening_to': os.getenv("FIREBASE_DATABASE_URL"),
+#         'tcp_broadcast_port': TCP_PORT,
+#         'connected_tcp_clients': len(tcp_clients)
+#     })
 
-@app.route('/status')
-def status():
-    return jsonify({
-        'status': 'active',
-        'recent_changes_count': len(recent_changes),
-        'max_stored': MAX_CHANGES_STORED,
-        'connected_tcp_clients': len(tcp_clients),
-        'tcp_broadcast_port': TCP_PORT
-    })
+# @app.route('/status')
+# def status():
+#     return jsonify({
+#         'status': 'active',
+#         'recent_changes_count': len(recent_changes),
+#         'max_stored': MAX_CHANGES_STORED,
+#         'connected_tcp_clients': len(tcp_clients),
+#         'tcp_broadcast_port': TCP_PORT
+#     })
 
 @app.route('/upstream', methods=['POST'])
 def output_upstream():
@@ -160,25 +160,25 @@ def output_upstream():
         print(f"Error processing upstream data: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
-@app.route('/recent-changes')
-def get_recent_changes():
-    return jsonify({
-        'changes': recent_changes,
-        'count': len(recent_changes)
-    })
+# @app.route('/recent-changes')
+# def get_recent_changes():
+#     return jsonify({
+#         'changes': recent_changes,
+#         'count': len(recent_changes)
+#     })
 
-@app.route('/tcp-clients')
-def get_tcp_clients():
-    client_info = []
-    for client in tcp_clients:
-        try:
-            client_info.append(str(client.getpeername()))
-        except:
-            client_info.append("disconnected")
-    return jsonify({
-        'connected_clients': client_info,
-        'count': len(tcp_clients)
-    })
+# @app.route('/tcp-clients')
+# def get_tcp_clients():
+#     client_info = []
+#     for client in tcp_clients:
+#         try:
+#             client_info.append(str(client.getpeername()))
+#         except:
+#             client_info.append("disconnected")
+#     return jsonify({
+#         'connected_clients': client_info,
+#         'count': len(tcp_clients)
+#     })
 
 # WebSocket events
 @socketio.on('connect')

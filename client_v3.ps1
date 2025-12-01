@@ -13,8 +13,13 @@ $script:clientId = $null
 # Function to check WiFi/Network availability
 function Test-NetworkConnection {
     try {
-        $ping = Test-Connection -ComputerName 8.8.8.8 -Count 1 -Quiet -ErrorAction SilentlyContinue
-        return $ping
+        # Try 2 times before declaring network down
+        $ping1 = Test-Connection -ComputerName 8.8.8.8 -Count 1 -Quiet -ErrorAction SilentlyContinue
+        if ($ping1) { return $true }
+        
+        Start-Sleep -Milliseconds 500
+        $ping2 = Test-Connection -ComputerName 8.8.8.8 -Count 1 -Quiet -ErrorAction SilentlyContinue
+        return $ping2
     }
     catch {
         return $false
@@ -115,7 +120,7 @@ while ($true) {
                 # Periodic network check
                 if (-not (Test-NetworkConnection)) {
                     Write-Host "`nNetwork connection lost!" -ForegroundColor Red
-                    throw [System.Net.Sockets.SocketException]::new("Network unavailable")
+                    throw [System.Exception]::new("Network unavailable")
                 }
 
                 # Check for incoming messages from server
@@ -123,7 +128,7 @@ while ($true) {
                     $message = $reader.ReadLine()
                     if ($null -eq $message) {
                         Write-Host "`nConnection closed by server" -ForegroundColor Yellow
-                        throw [System.Net.Sockets.SocketException]::new("Connection closed")
+                        throw [System.Exception]::new("Connection closed")
                     }
                     if ($null -ne $message) {
                         Write-Host "[Broadcast] $message" -ForegroundColor Cyan

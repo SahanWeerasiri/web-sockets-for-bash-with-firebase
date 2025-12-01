@@ -284,7 +284,7 @@ def output_upstream():
             print(f"\n{'='*60}")
             print(f"UPSTREAM FROM: {pc_name} (ID: {client_id})")
             print(f"{'='*60}")
-            print(f"OUTPUT:\n{output}")
+            print(f"OUTPUT:\n{str(output)[:100]}")
             print(f"{'='*60}")
             print(f"Uploading to Firebase: /{client_id}/exe/output")
             print("="*60 + "\n")

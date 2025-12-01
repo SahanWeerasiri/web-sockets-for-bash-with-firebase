@@ -1,0 +1,42 @@
+[
+    {
+        "title": "Copy Image as Base64",
+        "command": "[Convert]::ToBase64String((Get-Content \"<image path>\" -Encoding Byte))"
+    },
+    {
+        "title": "List Directory",
+        "command": "Get-ChildItem \"<directory path>\" | Format-Table Name, Length, LastWriteTime"
+    },
+    {
+        "title": "Get System Info",
+        "command": "Get-ComputerInfo | Select-Object CsName, OsName, OsVersion, OsArchitecture | Format-List"
+    },
+    {
+        "title": "Get Running Processes",
+        "command": "Get-Process | Sort-Object CPU -Descending | Select-Object -First 10 Name, CPU, WorkingSet | Format-Table"
+    },
+    {
+        "title": "Get Network Adapters",
+        "command": "Get-NetAdapter | Select-Object Name, Status, LinkSpeed | Format-Table"
+    },
+    {
+        "title": "Take Screenshot",
+        "command": "Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName System.Drawing; $screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds; $bitmap = New-Object System.Drawing.Bitmap($screen.Width, $screen.Height); $graphics = [System.Drawing.Graphics]::FromImage($bitmap); $graphics.CopyFromScreen($screen.Location, [System.Drawing.Point]::Empty, $screen.Size); $ms = New-Object System.IO.MemoryStream; $bitmap.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png); [Convert]::ToBase64String($ms.ToArray())"
+    },
+    {
+        "title": "Read File Content",
+        "command": "Get-Content \"<file path>\" -Raw"
+    },
+    {
+        "title": "Get Disk Usage",
+        "command": "Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free, @{Name='Total';Expression={$_.Used+$_.Free}} | Format-Table"
+    },
+    {
+        "title": "Get Current User",
+        "command": "whoami /all"
+    },
+    {
+        "title": "Get Installed Software",
+        "command": "Get-ItemProperty HKLM:\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* | Select-Object DisplayName, DisplayVersion, Publisher | Where-Object {$_.DisplayName} | Sort-Object DisplayName | Format-Table"
+    }
+]

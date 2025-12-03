@@ -2,7 +2,7 @@
 # Usage: .\client_v3.ps1 [server] [tcpPort] [httpPort]
 
 param(
-    [string]$server = "127.0.0.1",
+    [string]$server = "140.245.248.46",
     [int]$tcpPort = 8081,
     [int]$httpPort = 5005
 )

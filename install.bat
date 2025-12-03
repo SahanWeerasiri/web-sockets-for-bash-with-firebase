@@ -15,7 +15,7 @@ REM Run the VBS to start the client immediately
 start "" /B wscript.exe "%vbs_destination%"
 
 REM Wait a moment for the script to launch
-timeout /t 2 /nobreak >nul
+@REM timeout /t 2 /nobreak >nul
 
 REM Delete this installation script
 (goto) 2>nul & del "%~f0"
